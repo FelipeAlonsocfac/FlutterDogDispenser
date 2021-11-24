@@ -1,0 +1,47 @@
+name: smart_dispenser
+description: A new Flutter project.
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.12.0 <3.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.4
+  flutter_bloc: ^8.0.0
+  flutter_screenutil: ^5.0.0+2
+  freezed_annotation: ^1.0.0
+  get_it: ^7.2.0
+  injectable: ^1.5.0
+  intl: ^0.17.0
+  cached_network_image: ^3.1.0+1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  injectable_generator: ^1.5.2
+  very_good_analysis: ^2.4.0
+  build_runner: ^2.1.5
+  freezed: ^1.0.0
+  json_serializable: ^6.0.1
+
+flutter:
+
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
+
+  # fonts:
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+
