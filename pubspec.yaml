@@ -30,6 +30,9 @@ dev_dependencies:
   freezed: ^1.0.0
   json_serializable: ^6.0.1
 
+  smart_dispenser_api_client:
+    path: packages/smart_dispenser_api_client
+
 flutter:
 
   uses-material-design: true
