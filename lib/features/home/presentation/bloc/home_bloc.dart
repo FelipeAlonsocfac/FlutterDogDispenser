@@ -1,10 +1,9 @@
-import 'dart:developer';
-
 import 'package:bloc/bloc.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:injectable/injectable.dart';
 import 'package:smart_dispenser/core/shared/domain/errors/smart_dispenser_exceptions.dart';
 import 'package:smart_dispenser/features/home/domain/usecase/configurations_usecase.dart';
+import 'package:smart_dispenser_api_client/smart_dispense_api_client.dart';
 
 part 'home_state.dart';
 part 'home_event.dart';
@@ -24,9 +23,11 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
   ) async {
     try {
       final configurations = await _useCase.getConfigurations();
-      log(configurations.toJson().toString());
-    } on SmartDispenserExceptions catch (e) {
-      log(e.toString());
+      emit(state.copyWith(configurations: configurations, loading: false));
+    } on SmartDispenserExceptions catch (_) {
+      emit(state.copyWith(loading: false));
     }
   }
+
+  Future<void> refresh() async => add(const HomeEvent.loadData());
 }
