@@ -203,7 +203,10 @@ class Header extends StatelessWidget {
           color: Theme.of(context).colorScheme.secondary,
           child: SafeArea(
             child: Column(
-              children: const [ActionsAndTitle(), StatusDispenser()],
+              children: const [
+                ActionsAndTitle(),
+                StatusDispenser(),
+              ],
             ),
           ),
         ),
@@ -218,21 +221,27 @@ class StatusDispenser extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
+      child: Stack(
+        alignment: Alignment.center,
+        fit: StackFit.expand,
         children: [
-          BlocSelector<HomeBloc, HomeState, Configurations?>(
-            selector: (state) => state.configurations,
-            builder: (context, configurations) => CircularPercentIndicator(
-              radius: 150.r,
-              lineWidth: 15.r,
-              animation: true,
-              animationDuration: 900,
-              percent: configurations!.currentWeight / 5,
-              center: const ActualWeith(),
-              progressColor: Theme.of(context).primaryColor,
-              backgroundColor: Colors.black.withOpacity(.05),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              BlocSelector<HomeBloc, HomeState, Configurations?>(
+                selector: (state) => state.configurations,
+                builder: (_, configurations) => CircularPercentIndicator(
+                  radius: 150.r,
+                  lineWidth: 15.r,
+                  animation: true,
+                  animationDuration: 900,
+                  percent: configurations!.currentWeight / 5,
+                  center: const ActualWeith(),
+                  progressColor: Theme.of(context).primaryColor,
+                  backgroundColor: Colors.black.withOpacity(.05),
+                ),
+              ),
+            ],
           ),
         ],
       ),
