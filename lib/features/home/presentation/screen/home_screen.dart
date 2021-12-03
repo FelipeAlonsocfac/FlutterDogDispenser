@@ -1,9 +1,12 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:get_it/get_it.dart';
+import 'package:numberpicker/numberpicker.dart';
 import 'package:percent_indicator/circular_percent_indicator.dart';
+import 'package:smart_dispenser/features/home/domain/model/count_meal.dart';
 import 'package:smart_dispenser/features/home/presentation/bloc/home_bloc.dart';
 import 'package:smart_dispenser_api_client/smart_dispense_api_client.dart'
     show Configurations;
@@ -52,39 +55,97 @@ class HomeBody extends StatelessWidget {
 class Meals extends StatelessWidget {
   const Meals({Key? key}) : super(key: key);
 
+  Future<void> _showModal(
+    BuildContext context,
+    String title,
+    int value,
+    String hour,
+    MealType type,
+  ) async {
+    final bloc = context.read<HomeBloc>();
+    final result =
+        await DialogEditMeal.show<CountMeal>(context, title, value, hour);
+    if (result != null) {
+      bloc.add(HomeEvent.updateConfigurations(result, type));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SliverPadding(
       padding: EdgeInsets.symmetric(horizontal: 25.w),
       sliver: BlocSelector<HomeBloc, HomeState, Configurations?>(
         selector: (state) => state.configurations,
-        builder: (context, configurations) {
-          return SliverList(
-            delegate: SliverChildListDelegate(
-              [
-                SmartDispenserCard(
-                  title: 'Breakfast',
-                  hour:
-                      '''${configurations!.breakfastHour}:${configurations.breakfastMinute}''',
-                  gr: '${configurations.breakfastAmount}',
+        builder: (context, configurations) => SliverList(
+          delegate: SliverChildListDelegate(
+            [
+              SmartDispenserCard(
+                title: 'Breakfast',
+                hour:
+                    '''${configurations!.breakfastHour}:${configurations.breakfastMinute}''',
+                gr: '${configurations.breakfastAmount}',
+                onTap: () => _showModal(
+                  context,
+                  'Breakfast',
+                  configurations.breakfastAmount,
+                  '''${configurations.breakfastHour}:${configurations.breakfastMinute}''',
+                  MealType.breakFast,
                 ),
-                SmartDispenserCard(
-                  title: 'Lunch',
-                  hour:
-                      '''${configurations.lunchHour}:${configurations.lunchMinute}''',
-                  gr: '${configurations.lunchAmount}',
+              ),
+              SmartDispenserCard(
+                title: 'Lunch',
+                hour:
+                    '''${configurations.lunchHour}:${configurations.lunchMinute}''',
+                gr: '${configurations.lunchAmount}',
+                onTap: () => _showModal(
+                  context,
+                  'Lunch',
+                  configurations.lunchAmount,
+                  '''${configurations.lunchHour}:${configurations.lunchMinute}''',
+                  MealType.lunch,
                 ),
-                SmartDispenserCard(
-                  title: 'Dinner',
-                  hour:
-                      '''${configurations.dinnerHour}:${configurations.dinnerMinute}''',
-                  gr: '${configurations.dinnerAmount}',
+              ),
+              SmartDispenserCard(
+                title: 'Dinner',
+                hour:
+                    '''${configurations.dinnerHour}:${configurations.dinnerMinute}''',
+                gr: '${configurations.dinnerAmount}',
+                onTap: () => _showModal(
+                  context,
+                  'Dinner',
+                  configurations.dinnerAmount,
+                  '''${configurations.dinnerHour}:${configurations.dinnerMinute}''',
+                  MealType.dinner,
                 ),
-              ],
-            ),
-          );
-        },
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+class SmartDispenserCardContainer extends StatelessWidget {
+  const SmartDispenserCardContainer({Key? key, required this.child})
+      : super(key: key);
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
+      decoration: BoxDecoration(
+        color: Theme.of(context).scaffoldBackgroundColor,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(.1),
+            blurRadius: 8,
+          ),
+        ],
+      ),
+      child: child,
     );
   }
 }
@@ -95,10 +156,12 @@ class SmartDispenserCard extends StatelessWidget {
     required this.title,
     required this.hour,
     required this.gr,
+    required this.onTap,
   }) : super(key: key);
   final String title;
   final String hour;
   final String gr;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -106,62 +169,54 @@ class SmartDispenserCard extends StatelessWidget {
     final textTheme = theme.textTheme;
     return Padding(
       padding: EdgeInsets.only(bottom: 15.h),
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 15.h),
-        decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor,
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(.1),
-              blurRadius: 8,
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: textTheme.subtitle1?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
-                    ),
-                  ),
-                  SizedBox(height: 5.h),
-                  Text(
-                    hour,
-                    style: textTheme.subtitle1?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black.withOpacity(.5),
-                    ),
-                  ),
-                  SizedBox(height: 5.h),
-                  RichText(
-                    text: TextSpan(
-                      text: gr,
-                      style: textTheme.headline6?.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: Colors.black,
+      child: GestureDetector(
+        onTap: onTap,
+        child: SmartDispenserCardContainer(
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: textTheme.subtitle1?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.primaryColor,
                       ),
-                      children: [
-                        TextSpan(
-                          text: ' gr',
-                          style: textTheme.subtitle1?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black.withOpacity(.5),
-                          ),
-                        ),
-                      ],
                     ),
-                  ),
-                ],
+                    SizedBox(height: 5.h),
+                    Text(
+                      hour,
+                      style: textTheme.subtitle1?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black.withOpacity(.5),
+                      ),
+                    ),
+                    SizedBox(height: 5.h),
+                    RichText(
+                      text: TextSpan(
+                        text: gr,
+                        style: textTheme.headline6?.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: Colors.black,
+                        ),
+                        children: [
+                          TextSpan(
+                            text: ' gr',
+                            style: textTheme.subtitle1?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black.withOpacity(.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -244,6 +299,191 @@ class StatusDispenser extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class DialogEditMeal extends StatefulWidget {
+  const DialogEditMeal._(
+    this.title,
+    this.value,
+    this.hour, {
+    Key? key,
+  }) : super(key: key);
+  final String title;
+  final int value;
+  final String hour;
+
+  static Future<T?> show<T>(
+    BuildContext context,
+    String title,
+    int value,
+    String hour,
+  ) =>
+      showCupertinoModalPopup(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => DialogEditMeal._(title, value, hour),
+      );
+
+  @override
+  State<DialogEditMeal> createState() => _DialogEditMealState();
+}
+
+class _DialogEditMealState extends State<DialogEditMeal> {
+  late final TextEditingController hourController;
+  late final ValueNotifier<int> gr;
+  late TimeOfDay timeOfDay;
+
+  @override
+  void initState() {
+    hourController = TextEditingController(text: widget.hour);
+    gr = ValueNotifier<int>(widget.value);
+    timeOfDay = TimeOfDay(
+      hour: int.parse(widget.hour.split(':')[0]),
+      minute: int.parse(widget.hour.split(':')[1]),
+    );
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    hourController.dispose();
+    super.dispose();
+  }
+
+  Future<void> showPicker() async {
+    final timer = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(context).copyWith(alwaysUse24HourFormat: true),
+        child: child!,
+      ),
+    );
+    if (timer != null) {
+      timeOfDay = timer;
+      hourController.text = '${timer.hour}:${timer.minute}';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+        padding: EdgeInsets.symmetric(vertical: 15.h, horizontal: 30.w),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                widget.title,
+                style: theme.textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontSize: 18.sp,
+                ),
+              ),
+              SizedBox(height: 15.h),
+              Text(
+                'Hora',
+                style: theme.textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  fontSize: 12.sp,
+                ),
+              ),
+              SizedBox(height: 10.h),
+              GestureDetector(
+                onTap: showPicker,
+                child: AbsorbPointer(
+                  child: CupertinoTextField(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: 20.w,
+                      vertical: 15.h,
+                    ),
+                    enabled: false,
+                    style: theme.textTheme.subtitle1?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    controller: hourController,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).scaffoldBackgroundColor,
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(.1),
+                          blurRadius: 5,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              SizedBox(height: 15.h),
+              Text(
+                'Cantidad (gr)',
+                style: theme.textTheme.bodyText1?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black,
+                  fontSize: 12.sp,
+                ),
+              ),
+              SizedBox(height: 5.h),
+              ValueListenableBuilder<int>(
+                valueListenable: gr,
+                builder: (_, value, __) => NumberPicker(
+                  value: value,
+                  minValue: 0,
+                  maxValue: 400,
+                  step: 5,
+                  onChanged: (value) => gr.value = value,
+                  axis: Axis.horizontal,
+                  infiniteLoop: true,
+                  textStyle: theme.textTheme.bodyText1,
+                  selectedTextStyle: theme.textTheme.headline6?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.primaryColor,
+                  ),
+                  haptics: true,
+                ),
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  CupertinoButton(
+                    onPressed: Navigator.of(context).pop,
+                    padding: EdgeInsets.zero,
+                    child: const Text('Cancelar'),
+                  ),
+                  SizedBox(width: 15.w),
+                  CupertinoButton(
+                    onPressed: () {
+                      final countMeal = CountMeal(
+                        gr: gr.value,
+                        hour: timeOfDay.hour,
+                        minutes: timeOfDay.minute,
+                      );
+                      Navigator.of(context).pop(countMeal);
+                    },
+                    padding: EdgeInsets.zero,
+                    child: const Text('Ok'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
