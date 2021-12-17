@@ -1,6 +1,6 @@
 # smart_dispenser
 
-App for the carechimba
+dog dispenser App
 
 
 - Run next command
